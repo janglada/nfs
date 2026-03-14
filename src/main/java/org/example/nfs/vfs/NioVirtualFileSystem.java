@@ -1,6 +1,7 @@
 package org.example.nfs.vfs;
 
 import org.dcache.nfs.v4.NfsIdMapping;
+import org.dcache.nfs.v4.xdr.nfsace4;
 import org.dcache.nfs.vfs.AclCheckable;
 import org.dcache.nfs.vfs.DirectoryEntry;
 import org.dcache.nfs.vfs.DirectoryStream;
@@ -261,8 +262,71 @@ public final class NioVirtualFileSystem implements VirtualFileSystem {
     }
 
     @Override
+    public Inode parentOf(Inode inode) throws IOException {
+        var path = inodeMapper.toPath(inode);
+        var parent = path.getParent();
+        if (parent == null || !parent.startsWith(root)) {
+            return inodeMapper.toInode(root);
+        }
+        return inodeMapper.toInode(parent);
+    }
+
+    @Override
+    public int access(Subject subject, Inode inode, int mode) throws IOException {
+        return mode; // allow all
+    }
+
+    @Override
+    public int read(Inode inode, byte[] data, long offset, int count) throws IOException {
+        var path = inodeMapper.toPath(inode);
+        try (var fc = FileChannel.open(path, StandardOpenOption.READ)) {
+            var buf = java.nio.ByteBuffer.wrap(data, 0, count);
+            return Math.max(0, fc.read(buf, offset));
+        }
+    }
+
+    @Override
+    public WriteResult write(Inode inode, byte[] data, long offset, int count,
+                             StabilityLevel stabilityLevel) throws IOException {
+        var path = inodeMapper.toPath(inode);
+        try (var fc = FileChannel.open(path, StandardOpenOption.WRITE)) {
+            var buf = java.nio.ByteBuffer.wrap(data, 0, count);
+            int written = fc.write(buf, offset);
+            if (stabilityLevel != StabilityLevel.UNSTABLE) {
+                fc.force(false);
+            }
+            return new WriteResult(StabilityLevel.FILE_SYNC, written);
+        }
+    }
+
+    @Override
+    public void commit(Inode inode, long offset, int count) throws IOException {
+        // no-op: writes are already forced in FILE_SYNC mode
+    }
+
+    @Override
+    public nfsace4[] getAcl(Inode inode) throws IOException {
+        return new nfsace4[0];
+    }
+
+    @Override
+    public void setAcl(Inode inode, nfsace4[] acl) throws IOException {
+        // ACLs not supported; ignore
+    }
+
+    @Override
     public boolean hasIOLayout(Inode inode) {
         return false;
+    }
+
+    @Override
+    public boolean getCaseInsensitive() {
+        return false;
+    }
+
+    @Override
+    public boolean getCasePreserving() {
+        return true;
     }
 
     @Override

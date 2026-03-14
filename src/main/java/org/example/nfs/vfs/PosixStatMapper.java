@@ -21,7 +21,7 @@ public final class PosixStatMapper {
 
     private PosixStatMapper() {}
 
-    public static Stat toStat(Path path, PosixFileAttributes attrs, NfsIdMapping idmap) {
+    public static Stat toStat(Path path, PosixFileAttributes attrs, NfsIdMapping idmap) throws java.io.IOException {
         var stat = new Stat();
         stat.setUid(idmap.principalToUid(attrs.owner().getName()));
         stat.setGid(idmap.principalToGid(attrs.group().getName()));

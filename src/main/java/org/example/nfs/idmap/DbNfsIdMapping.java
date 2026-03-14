@@ -114,7 +114,7 @@ public final class DbNfsIdMapping implements NfsIdMapping {
     /** Update both caches atomically to keep them consistent. */
     private void populateBothCaches(int uid, String code) {
         byCode.put(code, uid);
-        byId.put(uid, code);
+        byId.put(uid, code + "@" + config.domain());
     }
 
     private String stripDomain(String principal) {

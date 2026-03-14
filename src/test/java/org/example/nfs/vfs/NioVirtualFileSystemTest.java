@@ -3,6 +3,7 @@ package org.example.nfs.vfs;
 import org.dcache.nfs.v4.NfsIdMapping;
 import org.dcache.nfs.vfs.Stat;
 import org.dcache.nfs.vfs.VirtualFileSystem.StabilityLevel;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -41,6 +42,11 @@ class NioVirtualFileSystemTest {
         when(idmap.gidToPrincipal(anyInt())).thenReturn("testgroup");
 
         vfs = new NioVirtualFileSystem(root, idmap);
+    }
+
+    @AfterEach
+    void tearDown() {
+        vfs.close();
     }
 
     // -----------------------------------------------------------------------

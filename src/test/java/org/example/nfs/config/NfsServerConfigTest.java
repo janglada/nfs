@@ -1,5 +1,6 @@
 package org.example.nfs.config;
 
+import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
@@ -7,13 +8,18 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 class NfsServerConfigTest {
 
+    private static DataSource stubDataSource() {
+        var ds = new JdbcDataSource();
+        ds.setURL("jdbc:h2:mem:");
+        return ds;
+    }
+
     @Test
     void defaultsPopulatesAllFields() {
-        var ds = mock(DataSource.class);
+        var ds = stubDataSource();
         var root = Path.of("/srv/nfs");
 
         var cfg = NfsServerConfig.defaults(root, ds);
@@ -28,7 +34,7 @@ class NfsServerConfigTest {
 
     @Test
     void customRecordStoresAllFields() {
-        var ds = mock(DataSource.class);
+        var ds = stubDataSource();
         var root = Path.of("/data");
         var cfg = new NfsServerConfig(2050, root, "mycompany.com", 99, ds, Duration.ofMinutes(5));
 
@@ -42,7 +48,7 @@ class NfsServerConfigTest {
 
     @Test
     void equalRecordsAreEqual() {
-        var ds = mock(DataSource.class);
+        var ds = stubDataSource();
         var root = Path.of("/srv/nfs");
         var a = NfsServerConfig.defaults(root, ds);
         var b = NfsServerConfig.defaults(root, ds);

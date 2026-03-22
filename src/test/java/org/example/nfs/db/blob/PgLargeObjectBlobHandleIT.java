@@ -29,6 +29,7 @@ class PgLargeObjectBlobHandleIT extends BlobHandleContractTest {
         try (Connection conn = DriverManager.getConnection(
                 pg.getJdbcUrl(), pg.getUsername(), pg.getPassword());
              Statement st = conn.createStatement()) {
+            conn.setAutoCommit(false);
             st.execute("""
                     CREATE TABLE IF NOT EXISTS fs_entry (
                         id      BIGSERIAL PRIMARY KEY,
@@ -57,6 +58,7 @@ class PgLargeObjectBlobHandleIT extends BlobHandleContractTest {
         try (Connection conn = DriverManager.getConnection(
                 pg.getJdbcUrl(), pg.getUsername(), pg.getPassword());
              Statement st = conn.createStatement()) {
+            conn.setAutoCommit(false);
             st.execute("DELETE FROM fs_entry WHERE id = " + TEST_ID);
             conn.commit();
         }
@@ -66,6 +68,7 @@ class PgLargeObjectBlobHandleIT extends BlobHandleContractTest {
     protected BlobHandle createHandle() throws Exception {
         Connection conn = DriverManager.getConnection(
                 pg.getJdbcUrl(), pg.getUsername(), pg.getPassword());
+        conn.setAutoCommit(false);
         return PgLargeObjectBlobHandle.create(conn, TEST_ID, "/test");
     }
 
@@ -73,6 +76,7 @@ class PgLargeObjectBlobHandleIT extends BlobHandleContractTest {
     protected BlobHandle openHandle() throws Exception {
         Connection conn = DriverManager.getConnection(
                 pg.getJdbcUrl(), pg.getUsername(), pg.getPassword());
+        conn.setAutoCommit(false);
         return new PgLargeObjectBlobHandle(conn, TEST_ID);
     }
 }

@@ -29,12 +29,17 @@ public final class NfsServer implements Closeable {
 
     private final OncRpcSvc rpcSvc;
 
-    public NfsServer(NfsServerConfig config) throws IOException {
-        NfsIdMapping idmap = new DbNfsIdMapping(config);
-        VirtualFileSystem vfs = new NioVirtualFileSystem(config.rootPath(), idmap);
+    public NfsServer(NfsServerConfig config, VirtualFileSystem vfs) throws IOException {
 
-        // Inline export: export root with full access (no Kerberos, no ACLs)
-        var exportContent = "/\t*(rw,no_root_squash,no_subtree_check)\n";
+        // VFS root must be the parent of the exported directory, because
+        // nfs4j's PseudoFs requires a non-root export path (exporting "/"
+        // triggers a bug where intermediate nodes are never added to the
+        // pseudo-fs tree, causing "No exports found").
+        var exportDir = config.rootPath().toAbsolutePath().normalize();
+        var vfsRoot = exportDir.getParent();
+
+        var exportPath = "/" + vfsRoot.relativize(exportDir);
+        var exportContent = exportPath + " *(rw,no_root_squash)\n";
         var exports = new ExportFile(new StringReader(exportContent));
 
         var nfsServer = new NFSServerV41.Builder()
@@ -50,6 +55,10 @@ public final class NfsServer implements Closeable {
                 .build();
 
         rpcSvc.register(new OncRpcProgram(NFS4_PROGRAM, NFS_V4), nfsServer);
+    }
+
+    public NfsServer(NfsServerConfig config) throws IOException {
+       this(config,  new NioVirtualFileSystem(config.rootPath().toAbsolutePath().normalize().getParent(), new DbNfsIdMapping(config)));
     }
 
     public void start() throws IOException {

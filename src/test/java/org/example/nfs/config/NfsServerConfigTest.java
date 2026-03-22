@@ -26,7 +26,7 @@ class NfsServerConfigTest {
 
         assertEquals(2049, cfg.port());
         assertEquals(root, cfg.rootPath());
-        assertEquals("domain.local", cfg.domain());
+        assertEquals("rivendell.local", cfg.domain());
         assertEquals(65534, cfg.nobodyUid());
         assertSame(ds, cfg.dataSource());
         assertEquals(Duration.ofSeconds(60), cfg.cacheExpiry());

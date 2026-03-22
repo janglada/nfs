@@ -16,6 +16,6 @@ public record NfsServerConfig(
         Duration cacheExpiry
 ) {
     public static NfsServerConfig defaults(Path rootPath, DataSource ds) {
-        return new NfsServerConfig(2049, rootPath, "domain.local", 65534, ds, Duration.ofSeconds(60));
+        return new NfsServerConfig(2049, rootPath, "rivendell.local", 65534, ds, Duration.ofSeconds(60));
     }
 }

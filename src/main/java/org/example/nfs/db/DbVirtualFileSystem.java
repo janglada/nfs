@@ -16,7 +16,10 @@ import org.example.nfs.db.cache.ChannelCache;
 import javax.security.auth.Subject;
 import javax.sql.DataSource;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -60,6 +63,19 @@ public final class DbVirtualFileSystem implements VirtualFileSystem {
                     var handle = BlobHandleFactory.openJdbc(conn, "fs_entry", "data", "id", inodeId);
                     return new BlobByteChannel(handle);
                 });
+
+
+        try(Connection conn = dataSource.getConnection()) {
+
+            InputStream sqlStream = VirtualFileSystem.class.getResourceAsStream("/sql/schema-common.sql");
+            String sql = new String(sqlStream.readAllBytes(), StandardCharsets.UTF_8);
+            System.out.println(sql);
+            conn.createStatement().execute(sql);
+
+
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Constructor with default 30-second idle timeout. */
@@ -604,10 +620,10 @@ public final class DbVirtualFileSystem implements VirtualFileSystem {
             case TYPE_SYMLINK -> Stat.S_IFLNK;
             default           -> Stat.S_IFREG;
         };
-        int permBits = rs.getInt("mode") & 0777;
+        int permBits = 0777; //rs.getInt("mode") & 0777;
         stat.setMode(typeBits | permBits);
-        stat.setUid(rs.getInt("owner_uid"));
-        stat.setGid(rs.getInt("owner_gid"));
+        stat.setUid(1000);
+        stat.setGid(1000);
         stat.setSize(rs.getLong("file_size"));
         stat.setCTime(rs.getLong("created_at"));
         stat.setMTime(rs.getLong("modified_at"));
